@@ -50,11 +50,11 @@ function setup() {
   startStopButton = createButton('Start');
   startStopButton.position(windowWidth / 2 - 60, windowHeight / 2); // 画面中央
   // ボタンのスタイル調整（大きくする）
-  startStopButton.style('width', '150px');    // ボタンの幅
-  startStopButton.style('height', '60px');    // ボタンの高さ
-  startStopButton.style('font-size', '20px'); // 文字サイズ
-  startStopButton.style('padding', '10px 15px'); // 余白
-  startStopButton.style('border-radius', '10px'); // 角を丸く
+  startStopButton.style('width', '300px');    // ボタンの幅
+  startStopButton.style('height', '120px');    // ボタンの高さ
+  startStopButton.style('font-size', '40px'); // 文字サイズ
+  startStopButton.style('padding', '20px 30px'); // 余白
+  startStopButton.style('border-radius', '20px'); // 角を丸く
   startStopButton.mousePressed(toggleRunning);
 }
 

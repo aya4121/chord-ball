@@ -30,26 +30,48 @@ class Circle {
     this.faceTransition = 1; 
   }
 
-move() {
-  // ユーザが画面に触れている場合は移動を停止する
-  if (touches.length > 0) {
-    return;
+  move() {
+    // ユーザが画面に触れている場合は移動を停止する
+    if (touches.length > 0) {
+      return;
+    }
+    
+    // 位置と角度の更新
+    this.x += this.speedX;
+    this.y += this.speedY;
+    this.angle += this.angularVelocity;
+  
+    // 壁チェック
+    let collidedWithWall = checkWallsAndBounce(this, width, height);
+    if (collidedWithWall) {
+      this.playSound(); // 壁衝突時の音再生
+      this.randomizeFace();
+    }
+    
+    // ============================
+    // ここからボタンとの衝突チェック
+    // ============================
+    // ボタンの画面上の位置情報を取得
+    let buttonRect = startStopButton.elt.getBoundingClientRect();
+    // canvas の位置情報を取得（canvasはsetup()でグローバルに定義しておく）
+    let canvasRect = canvas.elt.getBoundingClientRect();
+    // 円の中心の画面上の座標に変換
+    let circleScreenX = canvasRect.left + this.x;
+    let circleScreenY = canvasRect.top + this.y;
+    
+    // 円とボタンの矩形が重なっているかシンプルな衝突判定
+    if (circleScreenX + this.radius > buttonRect.left &&
+        circleScreenX - this.radius < buttonRect.right &&
+        circleScreenY + this.radius > buttonRect.top &&
+        circleScreenY - this.radius < buttonRect.bottom) {
+      this.playSound();
+      this.randomizeFace();
+    }
+    
+    // 回転の減衰
+    this.angularVelocity *= 0.99;
   }
   
-  this.x += this.speedX;
-  this.y += this.speedY;
-  this.angle += this.angularVelocity;
-
-  // 壁チェック
-  let collidedWithWall = checkWallsAndBounce(this, width, height);
-  if (collidedWithWall) {
-    this.playSound(); // 自分の音を鳴らす
-    this.randomizeFace();
-  }
-
-  // 回転減衰
-  this.angularVelocity *= 0.99;
-}
 
 
   checkCollision(other) {
