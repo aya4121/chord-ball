@@ -70,13 +70,7 @@ function draw() {
     for (let circle of circles) {
       circle.update(circles);
     }
-  } else {
-    // 停止中の場合はメッセージを表示
-    textAlign(CENTER, CENTER);
-    textSize(24);
-    fill(0);
-    text('Press Start to begin', width / 2, height / 2);
-  }
+  } 
 }
 
 // ====================
@@ -126,7 +120,7 @@ function initCircles() {
     
     // ノートに応じたサイズと彩度のマッピング
     // スマホ向けに最大半径を30、最小半径を8に調整
-    let radius = map(note, minNote, maxNote, 50, 10);
+    let radius = map(note, minNote, maxNote, 150, 30);
     let satVal = map(note, minNote, maxNote, 0, 65);
     // 基本色相を中心に、ノートに応じて色相を変化させる
     let hueVal = map(note, minNote, maxNote, hueValbase - 50, hueValbase + 50);
