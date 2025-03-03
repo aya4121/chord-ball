@@ -48,12 +48,16 @@ function setup() {
   
   // スタート/ストップボタンの作成と設定
   startStopButton = createButton('Start');
-  startStopButton.position(10, 10);
-  // ボタンのスタイル調整
-  startStopButton.style('font-size', '16px');
-  startStopButton.style('padding', '8px 12px');
+  startStopButton.position(windowWidth / 2 - 60, windowHeight / 2); // 画面中央
+  // ボタンのスタイル調整（大きくする）
+  startStopButton.style('width', '150px');    // ボタンの幅
+  startStopButton.style('height', '60px');    // ボタンの高さ
+  startStopButton.style('font-size', '20px'); // 文字サイズ
+  startStopButton.style('padding', '10px 15px'); // 余白
+  startStopButton.style('border-radius', '10px'); // 角を丸く
   startStopButton.mousePressed(toggleRunning);
 }
+
 
 // ====================
 // draw 関数
@@ -122,7 +126,7 @@ function initCircles() {
     
     // ノートに応じたサイズと彩度のマッピング
     // スマホ向けに最大半径を30、最小半径を8に調整
-    let radius = map(note, minNote, maxNote, 30, 8);
+    let radius = map(note, minNote, maxNote, 50, 10);
     let satVal = map(note, minNote, maxNote, 0, 65);
     // 基本色相を中心に、ノートに応じて色相を変化させる
     let hueVal = map(note, minNote, maxNote, hueValbase - 50, hueValbase + 50);
