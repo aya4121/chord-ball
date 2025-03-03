@@ -43,20 +43,24 @@ let chosenScaleObj;
 // setup 関数
 // ====================
 function setup() {
-  // スマホの縦画面に合わせてウィンドウサイズを使用
   createCanvas(windowWidth, windowHeight);
-  
+
+  // ボタンのサイズ設定
+  let buttonWidth = 300;
+  let buttonHeight = 150;
+
   // スタート/ストップボタンの作成と設定
   startStopButton = createButton('Start');
-  startStopButton.position(windowWidth / 2, windowHeight / 2); // 画面中央
+  startStopButton.position((windowWidth - buttonWidth) / 2, (windowHeight - buttonHeight) / 2); // 画面中央
   // ボタンのスタイル調整（大きくする）
-  startStopButton.style('width', '300px');    // ボタンの幅
-  startStopButton.style('height', '120px');    // ボタンの高さ
-  startStopButton.style('font-size', '40px'); // 文字サイズ
-  startStopButton.style('padding', '20px 30px'); // 余白
-  startStopButton.style('border-radius', '20px'); // 角を丸く
+  startStopButton.style('width', buttonWidth + 'px');    // ボタンの幅
+  startStopButton.style('height', buttonHeight + 'px');  // ボタンの高さ
+  startStopButton.style('font-size', '60px');            // 文字サイズ
+  startStopButton.style('padding', '20px 30px');         // 余白
+  startStopButton.style('border-radius', '20px');        // 角を丸く
   startStopButton.mousePressed(toggleRunning);
 }
+
 
 
 // ====================
