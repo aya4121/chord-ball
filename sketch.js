@@ -48,7 +48,7 @@ function setup() {
   
   // スタート/ストップボタンの作成と設定
   startStopButton = createButton('Start');
-  startStopButton.position(windowWidth / 2 - 60, windowHeight / 2); // 画面中央
+  startStopButton.position(windowWidth / 2, windowHeight / 2); // 画面中央
   // ボタンのスタイル調整（大きくする）
   startStopButton.style('width', '300px');    // ボタンの幅
   startStopButton.style('height', '120px');    // ボタンの高さ
