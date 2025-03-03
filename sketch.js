@@ -43,11 +43,15 @@ let chosenScaleObj;
 // setup 関数
 // ====================
 function setup() {
-  createCanvas(1000, 400);
+  // スマホの縦画面に合わせてウィンドウサイズを使用
+  createCanvas(windowWidth, windowHeight);
   
   // スタート/ストップボタンの作成と設定
   startStopButton = createButton('Start');
   startStopButton.position(10, 10);
+  // ボタンのスタイル調整
+  startStopButton.style('font-size', '16px');
+  startStopButton.style('padding', '8px 12px');
   startStopButton.mousePressed(toggleRunning);
 }
 
@@ -67,7 +71,7 @@ function draw() {
     textAlign(CENTER, CENTER);
     textSize(24);
     fill(0);
-    text('Press Start to begin', width/2, height/2);
+    text('Press Start to begin', width / 2, height / 2);
   }
 }
 
@@ -117,7 +121,8 @@ function initCircles() {
     let note = chosenScale[i];
     
     // ノートに応じたサイズと彩度のマッピング
-    let radius = map(note, minNote, maxNote, 65, 15);
+    // スマホ向けに最大半径を30、最小半径を8に調整
+    let radius = map(note, minNote, maxNote, 30, 8);
     let satVal = map(note, minNote, maxNote, 0, 65);
     // 基本色相を中心に、ノートに応じて色相を変化させる
     let hueVal = map(note, minNote, maxNote, hueValbase - 50, hueValbase + 50);
@@ -139,9 +144,17 @@ function initCircles() {
     ));
   }
   
-  // RGBモードに戻す（必要に応じて）
+  // 必要に応じてRGBモードに戻す
   colorMode(RGB, 255);
 }
+
+// ====================
+// windowResized() を追加して、ウィンドウサイズ変更に対応（オプション）
+// ====================
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+}
+
 
 
 
