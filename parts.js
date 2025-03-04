@@ -39,24 +39,40 @@ class Circle {
    * 現在のスケール情報でプロパティ（midi ノート、サイズ、色）を更新
    */
   updateScale(newScaleObj, sizes) {
-    this.chosenScaleObj = newScaleObj;
-    this.scale = newScaleObj.scale;
-    let note = this.scale[this.index];
-    this.midiNote = note;
-    
-    let minNote = this.scale[0];
-    let maxNote = this.scale[this.scale.length - 1];
-    this.radius = map(note, minNote, maxNote, sizes / 8, sizes / 40);
-    
-    let hueValbase = hueMapping[newScaleObj.key];
-    let brightVal = (newScaleObj.mode === 'major') ? 90 : 70;
-    let satVal = map(note, minNote, maxNote, 0, 65);
-    let hueVal = map(note, minNote, maxNote, hueValbase - 50, hueValbase + 50);
-    colorMode(HSB, 360, 100, 100);
-    let c = color(hueVal, satVal, brightVal);
-    this.color = { r: red(c), g: green(c), b: blue(c) };
-    colorMode(RGB, 255);
+      this.chosenScaleObj = newScaleObj;
+      this.scale = newScaleObj.scale;
+      let note = this.scale[this.index];
+      this.midiNote = note;
+
+      let minNote = this.scale[0];
+      let maxNote = this.scale[this.scale.length - 1];
+      this.radius = map(note, minNote, maxNote, sizes / 8, sizes / 40);
+
+      let hueValbase = hueMapping[newScaleObj.key];
+      let brightVal = (newScaleObj.mode === 'major') ? 90 : 70;
+
+      // どの sharp 値でも satVal の範囲は同じなので、一律に設定
+      let satVal = map(note, minNote, maxNote, 0, 65);
+
+      // sharp の値に応じて hueVal の変化幅を調整
+      let hueOffset;
+      switch (newScaleObj.sharp) {
+          case 0: hueOffset = 50; break;
+          case 1: hueOffset = 50; break;
+          case 2: hueOffset = 50; break;
+          case 3: hueOffset = 50; break;
+          default: hueOffset = 50; // デフォルト値（念のため）
+      }
+
+      let hueVal = map(note, minNote, maxNote, hueValbase - hueOffset, hueValbase + hueOffset);
+
+      // 色の設定
+      colorMode(HSB, 360, 100, 100);
+      let c = color(hueVal, satVal, brightVal);
+      this.color = { r: red(c), g: green(c), b: blue(c) };
+      colorMode(RGB, 255);
   }
+
   
   /**
    * 新しいスケールへのトランジションを開始
