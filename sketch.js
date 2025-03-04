@@ -5,6 +5,13 @@ let circles = [];
 let running = false;   // シミュレーション実行中かどうか
 let startStopButton;
 
+// スケールを切り替える時間管理用
+let lastChangeTime = 0;          // 最後にスケールを変えた時刻
+let scaleChangeInterval = 7000;  // 切り替え間隔(ミリ秒) ここでは6秒
+
+// 変化のトランジション時間（ミリ秒）
+let transitionTime = 1000;
+
 // 各スケール（Major/Minor）にキー、モード、音階配列をセット
 let availableScales = [
   // Major Scales
@@ -27,13 +34,13 @@ let availableScales = [
 
 // 各キーに対応する基本色相
 let hueMapping = {
-  'C': 90,
+  'C': 100,
   'D': 50,
   'E': 150,
-  'F': 350,
-  'G': 190,
-  'A': 320,
-  'B': 0
+  'F': 0,
+  'G': 200,
+  'A': 250,
+  'B': 300
 };
 
 // 選ばれたスケール（オブジェクト形式：{ key, mode, scale }）
@@ -44,45 +51,43 @@ let chosenScaleObj;
 // ====================
 function setup() {
   createCanvas(windowWidth, windowHeight);
+  
   let sizes = Math.sqrt(windowWidth * windowHeight);
-
-// スケール係数としてウィンドウ面積の平方根を取得
-
-  // ボタンのサイズを調整（適切な係数を設定）
   let buttonWidth = sizes / 5;
   let buttonHeight = sizes / 10;
-
-  // スタート/ストップボタンの作成と設定
+  
   startStopButton = createButton('Start');
   startStopButton.position(
     (windowWidth - buttonWidth) / 2,
     (windowHeight - buttonHeight) / 2
   );
-
-  // ボタンのスタイル調整（スケールに応じて変更）
-  startStopButton.style('width', buttonWidth + 'px');    
-  startStopButton.style('height', buttonHeight + 'px');  
-  startStopButton.style('font-size', (buttonWidth /6) + 'px'); // 文字サイズを自動調整
-  startStopButton.style('padding', (buttonHeight / 10) + 'px ' + (buttonWidth / 20) + 'px'); // 余白
-  startStopButton.style('border-radius', (buttonHeight / 5) + 'px'); // 角を丸く
-
+  startStopButton.style('width', buttonWidth + 'px');
+  startStopButton.style('height', buttonHeight + 'px');
+  startStopButton.style('font-size', (buttonWidth / 6) + 'px');
+  startStopButton.style('padding', (buttonHeight / 10) + 'px ' + (buttonWidth / 20) + 'px');
+  startStopButton.style('border-radius', (buttonHeight / 5) + 'px');
+  
   startStopButton.mousePressed(toggleRunning);
 }
-
-
 
 // ====================
 // draw 関数
 // ====================
 function draw() {
   clear();
-  
-  // シミュレーション実行中の場合は各Circleを更新
+
   if (running) {
+    // 各 Circle の更新（内部でトランジション更新も行う）
     for (let circle of circles) {
       circle.update(circles);
     }
-  } 
+    
+    // scaleChangeInterval 経過後、各 Circle のスケールのトランジションを開始
+    if (millis() - lastChangeTime > scaleChangeInterval) {
+      lastChangeTime = millis();
+      updateCirclesScale();
+    }
+  }
 }
 
 // ====================
@@ -92,74 +97,61 @@ function toggleRunning() {
   running = !running;
   
   if (running) {
-    // シミュレーション開始時、新たなスケールでCircleを生成
     initCircles();
+    lastChangeTime = millis();
     startStopButton.html('Stop');
   } else {
-    // 停止時、Circleをクリア
     circles = [];
     startStopButton.html('Start');
   }
 }
 
 // ====================
-// 新たなスケールでCircleを初期化する関数
+// 初回の Circle を生成する関数
 // ====================
 function initCircles() {
-  sizes = Math.sqrt(windowWidth * windowHeight);
+  let sizes = Math.sqrt(windowWidth * windowHeight);
+  let oldPositions = circles.map(circle => ({ x: circle.x, y: circle.y }));
   circles = [];
   
-  // 利用可能なスケールからランダムに1つ選択
-  chosenScaleObj = random(availableScales);
-  let chosenScale = chosenScaleObj.scale;
-  let keyLetter = chosenScaleObj.key;
+  let newScaleObj;
+  do {
+    newScaleObj = random(availableScales);
+  } while (newScaleObj === chosenScaleObj);
   
-  // キーに対応する基本色相を取得
-  let hueValbase = hueMapping[keyLetter];
+  chosenScaleObj = newScaleObj;
   
-  // モードに応じた明度の設定（major: 90, minor: 70）
-  let brightVal = chosenScaleObj.mode === 'major' ? 90 : 70;
-  
-  // スケール内の最低音と最高音を取得
-  let minNote = chosenScale[0];
-  let maxNote = chosenScale[chosenScale.length - 1];
-
-  // HSBモードに設定
-  colorMode(HSB, 360, 100, 100);
-
-  // 選ばれたスケール内の各MIDIノートからCircleを生成
-  for (let i = 0; i < chosenScale.length; i++) {
-    let note = chosenScale[i];
-    
-    // ノートに応じたサイズと彩度のマッピング
-    let radius = map(note, minNote, maxNote,sizes/8, sizes/40);
-    let satVal = map(note, minNote, maxNote, 0, 65);
-    // 基本色相を中心に、ノートに応じて色相を変化させる
-    let hueVal = map(note, minNote, maxNote, hueValbase - 50, hueValbase + 50);
-    
-    // HSB から RGB へ変換
-    let c = color(hueVal, satVal, brightVal);
-    
-    // Circle オブジェクトを生成して配列に追加
-    circles.push(new Circle(
-      random(radius, width - radius),
-      random(radius, height - radius),
-      radius,
-      random(-(sizes/200), sizes/200),
-      random(-(sizes/200), sizes/200),
-      red(c),
-      green(c),
-      blue(c),
-      note
-    ));
+  for (let i = 0; i < chosenScaleObj.scale.length; i++) {
+    let posX = (oldPositions[i] !== undefined) ? oldPositions[i].x : random(20, width - 20);
+    let posY = (oldPositions[i] !== undefined) ? oldPositions[i].y : random(20, height - 20);
+    circles.push(new Circle(posX, posY, chosenScaleObj, i, sizes));
   }
   
-  // 必要に応じてRGBモードに戻す
   colorMode(RGB, 255);
 }
 
 // ====================
-// windowResized() を追加して、ウィンドウサイズ変更に対応（オプション）
+// 既存の Circle のスケール情報のトランジションを開始する関数
+// ====================
+function updateCirclesScale() {
+  let sizes = Math.sqrt(windowWidth * windowHeight);
+  let newScaleObj;
+  do {
+    newScaleObj = random(availableScales);
+  } while (newScaleObj === chosenScaleObj);
+  
+  chosenScaleObj = newScaleObj;
+  
+  // 各 Circle に対してトランジション開始
+  for (let circle of circles) {
+    circle.startScaleTransition(newScaleObj, sizes);
+  }
+  
+  colorMode(RGB, 255);
+}
+
+// ====================
+// ウィンドウサイズ変更に対応
 // ====================
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
