@@ -44,20 +44,28 @@ let chosenScaleObj;
 // ====================
 function setup() {
   createCanvas(windowWidth, windowHeight);
+  let sizes = Math.sqrt(windowWidth * windowHeight);
 
-  // ボタンのサイズ設定
-  let buttonWidth = 300;
-  let buttonHeight = 150;
+// スケール係数としてウィンドウ面積の平方根を取得
+
+  // ボタンのサイズを調整（適切な係数を設定）
+  let buttonWidth = sizes / 5;
+  let buttonHeight = sizes / 10;
 
   // スタート/ストップボタンの作成と設定
   startStopButton = createButton('Start');
-  startStopButton.position((windowWidth - buttonWidth) / 2, (windowHeight - buttonHeight) / 2); // 画面中央
-  // ボタンのスタイル調整（大きくする）
-  startStopButton.style('width', buttonWidth + 'px');    // ボタンの幅
-  startStopButton.style('height', buttonHeight + 'px');  // ボタンの高さ
-  startStopButton.style('font-size', '60px');            // 文字サイズ
-  startStopButton.style('padding', '20px 30px');         // 余白
-  startStopButton.style('border-radius', '20px');        // 角を丸く
+  startStopButton.position(
+    (windowWidth - buttonWidth) / 2,
+    (windowHeight - buttonHeight) / 2
+  );
+
+  // ボタンのスタイル調整（スケールに応じて変更）
+  startStopButton.style('width', buttonWidth + 'px');    
+  startStopButton.style('height', buttonHeight + 'px');  
+  startStopButton.style('font-size', (buttonWidth /6) + 'px'); // 文字サイズを自動調整
+  startStopButton.style('padding', (buttonHeight / 10) + 'px ' + (buttonWidth / 20) + 'px'); // 余白
+  startStopButton.style('border-radius', (buttonHeight / 5) + 'px'); // 角を丸く
+
   startStopButton.mousePressed(toggleRunning);
 }
 
@@ -98,6 +106,7 @@ function toggleRunning() {
 // 新たなスケールでCircleを初期化する関数
 // ====================
 function initCircles() {
+  sizes = Math.sqrt(windowWidth * windowHeight);
   circles = [];
   
   // 利用可能なスケールからランダムに1つ選択
@@ -123,8 +132,7 @@ function initCircles() {
     let note = chosenScale[i];
     
     // ノートに応じたサイズと彩度のマッピング
-    // スマホ向けに最大半径を30、最小半径を8に調整
-    let radius = map(note, minNote, maxNote, 150, 30);
+    let radius = map(note, minNote, maxNote,sizes/10, sizes/40);
     let satVal = map(note, minNote, maxNote, 0, 65);
     // 基本色相を中心に、ノートに応じて色相を変化させる
     let hueVal = map(note, minNote, maxNote, hueValbase - 50, hueValbase + 50);
