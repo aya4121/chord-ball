@@ -132,7 +132,7 @@ function initCircles() {
     let note = chosenScale[i];
     
     // ノートに応じたサイズと彩度のマッピング
-    let radius = map(note, minNote, maxNote,sizes/10, sizes/40);
+    let radius = map(note, minNote, maxNote,sizes/8, sizes/40);
     let satVal = map(note, minNote, maxNote, 0, 65);
     // 基本色相を中心に、ノートに応じて色相を変化させる
     let hueVal = map(note, minNote, maxNote, hueValbase - 50, hueValbase + 50);
@@ -142,11 +142,11 @@ function initCircles() {
     
     // Circle オブジェクトを生成して配列に追加
     circles.push(new Circle(
-      random(50, width - 50),
-      random(50, height - 50),
+      random(radius, width - radius),
+      random(radius, height - radius),
       radius,
-      random(-5, 5),
-      random(-5, 5),
+      random(-(sizes/200), sizes/200),
+      random(-(sizes/200), sizes/200),
       red(c),
       green(c),
       blue(c),
