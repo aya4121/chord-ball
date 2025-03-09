@@ -6,7 +6,7 @@ const config = {
   rotationWakeThreshold : 0.4,
   movementThreshold : 0.02,
   rotationFactor : 0.005,
-  maxSpeed : 0.04,
+  maxSpeed : 0.03,
   availableScales: [
     // Major Scales
     { key: 'C',  mode: 'major', scale: [43, 48, 52, 55, 60, 64, 67, 72], sharp: 0 },
