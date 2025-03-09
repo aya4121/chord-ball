@@ -2,6 +2,11 @@
 const config = {
   scaleChangeInterval: 7000,
   transitionTime: 1000,
+  gravity : 0.8,
+  rotationWakeThreshold : 4,
+  movementThreshold : 3500,
+  rotationFactor : 1000,
+  maxSpeed : 8000,
   availableScales: [
     // Major Scales
     { key: 'C',  mode: 'major', scale: [43, 48, 52, 55, 60, 64, 67, 72], sharp: 0 },
@@ -37,7 +42,7 @@ const config = {
     'Fm': 0, 'F#m': 330, 'Gm': 210, 'G#m': 240, 'Am': 300, 'A#m': 270, 'Bm': 120
   },
   oscillatorType: "sine",
-  envelopeADSR: { attack: 0.01, decay: 1, sustain: 0.0, release: 0.05 },
+  envelopeADSR: { attack: 0.005, decay: 0.4, sustain: 0.0, release: 0.05 },
   envelopeRange: { max: 0.5, min: 0 },
   // 以下、config で渡す円の各種パラメータ
   circleRadiusMaxDivisor: 8,

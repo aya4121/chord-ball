@@ -70,10 +70,12 @@ function elasticCollision2D(c1, c2) {
   c2.speedX = v2rNew * cosA - v2tNew * sinA;
   c2.speedY = v2rNew * sinA + v2tNew * cosA;
 
-  // 回転 (衝撃量を適当に角速度へ)
-  const impulse = (v1r - v2r) * (m1*m2)/(m1+m2);
+  // 衝突時のラジアル速度の差に基づくインパルス
+  const impulse = (v1r - v2r) * (m1 * m2) / (m1 + m2);
+
   c1.angularVelocity += impulse / (m1 * 30);
   c2.angularVelocity -= impulse / (m2 * 30);
+
 }
 
 /**
@@ -81,19 +83,20 @@ function elasticCollision2D(c1, c2) {
  * @param {Circle} c1 
  * @param {Circle} c2 
  */
+
+
 function preventOverlap(c1, c2) {
   const distCenters = dist(c1.x, c1.y, c2.x, c2.y);
   const minDist = c1.radius + c2.radius;
   const overlap = minDist - distCenters;
-  if (overlap > 0) {
-    const angle = Math.atan2(c2.y - c1.y, c2.x - c1.x);
-    const cosA = Math.cos(angle);
-    const sinA = Math.sin(angle);
-
-    const half = overlap / 2;
-    c1.x -= half * cosA;
-    c1.y -= half * sinA;
-    c2.x += half * cosA;
-    c2.y += half * sinA;
-  }
+  const angle = Math.atan2(c2.y - c1.y, c2.x - c1.x);
+  const cosA = Math.cos(angle);
+  const sinA = Math.sin(angle);
+  const half = overlap / 2;
+  c1.x -= half * cosA;
+  c1.y -= half * sinA;
+  c2.x += half * cosA;
+  c2.y += half * sinA;
+  
 }
+

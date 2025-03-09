@@ -11,11 +11,34 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.1/addons/p5.sound.min.js"></script>
     <link rel="stylesheet" type="text/css" href="style.css">
     <meta charset="utf-8" />
-
   </head>
   <body>
     <main>
+      <button id="motionPermissionButton" onclick="requestMotionPermission()">加速度センサーを許可</button>
     </main>
+    <script>
+      function requestMotionPermission() {
+        if (
+          typeof DeviceMotionEvent !== "undefined" &&
+          typeof DeviceMotionEvent.requestPermission === "function"
+        ) {
+          DeviceMotionEvent.requestPermission()
+            .then((permissionState) => {
+              if (permissionState === "granted") {
+                alert("加速度センサーが許可されました");
+                document.getElementById("motionPermissionButton").style.display = "none"; // ボタンを隠す
+              } else {
+                alert("加速度センサーのアクセスが拒否されました");
+              }
+            })
+            .catch(console.error);
+        } else {
+          alert("このデバイスでは加速度センサーの許可は不要です");
+          document.getElementById("motionPermissionButton").style.display = "none"; // ボタンを隠す
+        }
+      }
+    </script>
     <script src="sketch.js"></script>
   </body>
 </html>
+
