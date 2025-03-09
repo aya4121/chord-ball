@@ -5,7 +5,7 @@ const config = {
   gravity : 0.8,
   rotationWakeThreshold : 4,
   movementThreshold : 3500,
-  rotationFactor : 1000,
+  rotationFactor : 4000,
   maxSpeed : 8000,
   availableScales: [
     // Major Scales
