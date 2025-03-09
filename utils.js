@@ -73,8 +73,8 @@ function elasticCollision2D(c1, c2) {
   // 衝突時のラジアル速度の差に基づくインパルス
   const impulse = (v1r - v2r) * (m1 * m2) / (m1 + m2);
 
-  c1.angularVelocity += impulse / (m1 * 30);
-  c2.angularVelocity -= impulse / (m2 * 30);
+  c1.angularVelocity += impulse / (m1 * 50);
+  c2.angularVelocity -= impulse / (m2 * 50);
 
 }
 
