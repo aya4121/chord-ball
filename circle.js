@@ -269,9 +269,9 @@ update(circles, sizes) {
     preventOverlap(this, other);
 
     // 衝突直後の音などの処理
-    this.playSound();
+    // this.playSound();
     this.randomizeFace();
-    other.playSound();
+    // other.playSound();
     other.randomizeFace();
 
     // 保存した速度を再設定して、次フレームから動かす
