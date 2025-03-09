@@ -3,10 +3,10 @@ const config = {
   scaleChangeInterval: 7000,
   transitionTime: 1000,
   gravity : 0.8,
-  rotationWakeThreshold : 4,
-  movementThreshold : 3500,
-  rotationFactor : 20000,
-  maxSpeed : 8000,
+  rotationWakeThreshold : 0.4,
+  movementThreshold : 0.02,
+  rotationFactor : 0.005,
+  maxSpeed : 0.04,
   availableScales: [
     // Major Scales
     { key: 'C',  mode: 'major', scale: [43, 48, 52, 55, 60, 64, 67, 72], sharp: 0 },

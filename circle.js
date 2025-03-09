@@ -83,7 +83,7 @@ class Circle {
     this.windowStartX = undefined;    // 一定期間の開始位置 X
     this.windowStartY = undefined;    // 一定期間の開始位置 Y
     // 閾値の設定（ピクセル単位およびミリ秒単位）
-    this.movementThreshold = config.movementThreshold/sizes; // このウィンドウ内での総移動量がこの値未満なら「静止」とみなす
+    this.movementThreshold = config.movementThreshold * sizes; // このウィンドウ内での総移動量がこの値未満なら「静止」とみなす
     this.sleepTimeThreshold = 100; // 100ミリ秒以上の期間で評価
     // -------------------------------
     
@@ -151,7 +151,7 @@ update(circles, sizes) {
   if (this.sleeping) {
     const rotationDiffX = abs(rotationX - this.sleepRotationX);
     const rotationDiffY = abs(rotationY - this.sleepRotationY);
-    if (rotationDiffX >= config.rotationWakeThreshold || rotationDiffY >= config.rotationWakeThreshold/sizes) {
+    if (rotationDiffX >= config.rotationWakeThreshold || rotationDiffY >= config.rotationWakeThreshold) {
       // 外部からの大きな入力があれば、sleep解除
       this.sleeping = false;
       // ウィンドウの初期化もリセット
@@ -164,10 +164,10 @@ update(circles, sizes) {
   // sleep 状態なら、物理更新（move, checkCollision）はスキップ
   if (!this.sleeping) {
     // 外部入力による速度更新
-    this.speedX += (rotationY * (config.rotationFactor/sizes));
-    this.speedY += (rotationX * (config.rotationFactor/sizes));
+    this.speedX += (rotationY * (config.rotationFactor*sizes));
+    this.speedY += (rotationX * (config.rotationFactor*sizes));
     
-    const maxSpeed = config.maxSpeed/sizes;
+    const maxSpeed = config.maxSpeed*sizes;
     this.speedX = constrain(this.speedX, -maxSpeed, maxSpeed);
     this.speedY = constrain(this.speedY, -maxSpeed, maxSpeed);
 
@@ -340,7 +340,6 @@ update(circles, sizes) {
     pop();
   }
 }
-
 
 
 
