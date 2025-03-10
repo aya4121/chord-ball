@@ -3,6 +3,13 @@ function deviceMoved() {
   accX = accelerationX;
   accY = accelerationY;
   accZ = accelerationZ;
+
+  // 加速度の合計値を基に `max` を決定 (例えば 0 〜 1 の範囲に正規化)
+  let accMagnitude = Math.sqrt(accX * accX + accY * accY + accZ * accZ); // ベクトルの大きさ
+  let newMax = map(accMagnitude, 0, 3, 0, 1); // 0~20m/s² を 0~1 にマッピング
+  newMax = constrain(newMax, 0.1, 0.5); // 0〜1 の範囲に制限
+
+  config.envelopeRange.max = newMax; // max を更新
 }
 
 // 円の初期化。config.availableScales からランダムにスケールを選び、各 Circle を生成します。
@@ -300,6 +307,7 @@ update(circles, sizes) {
   playSound() {
     const freq = midiToFreq(this.midiNote);
     this.oscillator.freq(freq);
+    this.env.setRange(config.envelopeRange.max, config.envelopeRange.min);
     this.env.play(this.oscillator, 0, 0.1);
   }
 
