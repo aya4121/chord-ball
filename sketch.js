@@ -6,16 +6,16 @@ let startStopButton;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  let sizes = Math.sqrt(windowWidth * windowHeight);
-  Startstopbutton(sizes);
+  const sizes = Math.sqrt(windowWidth * windowHeight);
+  createStartStopButton(sizes);
 }
 
 function draw() {
-  let sizes = Math.sqrt(windowWidth * windowHeight);
+  const sizes = Math.sqrt(windowWidth * windowHeight);
   clear();
 
   if (running) {
-    for (let circle of circles) {
+    for (const circle of circles) {
       circle.update(circles, sizes);
       circle.display();
     }
@@ -24,13 +24,9 @@ function draw() {
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
-  let sizes = Math.sqrt(windowWidth * windowHeight);
+  const sizes = Math.sqrt(windowWidth * windowHeight);
   setButtonStyle(startStopButton, sizes);
 }
-
-
-
-
 
 
 
