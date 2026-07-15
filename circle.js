@@ -1,21 +1,18 @@
-let accX = 0, accY = 0, accZ = 0;
+// 加速度センサーの入力を受け取り、音量エンベロープの最大値に反映する（p5.js のライフサイクル関数）
 function deviceMoved() {
-  accX = accelerationX;
-  accY = accelerationY;
-  accZ = accelerationZ;
-
-  // 加速度の合計値を基に `max` を決定 (例えば 0 〜 1 の範囲に正規化)
-  let accMagnitude = Math.sqrt(accX * accX + accY * accY + accZ * accZ); // ベクトルの大きさ
-  let newMax = map(accMagnitude, 0, 3, 0, 1); // 0~20m/s² を 0~1 にマッピング
-  newMax = constrain(newMax, 0.1, 0.5); // 0〜1 の範囲に制限
-
-  config.envelopeRange.max = newMax; // max を更新
+  const magnitude = Math.sqrt(
+    accelerationX * accelerationX +
+    accelerationY * accelerationY +
+    accelerationZ * accelerationZ
+  );
+  // 0〜3 の加速度を 0〜1 に正規化し、さらに 0.1〜0.5 の範囲に収める
+  config.envelopeRange.max = constrain(map(magnitude, 0, 3, 0, 1), 0.1, 0.5);
 }
 
 // 円の初期化。config.availableScales からランダムにスケールを選び、各 Circle を生成します。
 function initCircles(sizes) {
   chosenScaleObj = random(config.availableScales);
-  circles = []; // 配列を初期化
+  circles = [];
 
   for (let i = 0; i < chosenScaleObj.scale.length; i++) {
     circles.push(new Circle(chosenScaleObj, i, sizes));
@@ -41,17 +38,17 @@ class Circle {
     this.chosenScaleObj = chosenScaleObj;
     this.scale = chosenScaleObj.scale;
     this.index = index;
-    // 円の大きさは config.circleRadiusMaxDivisor, circleRadiusMinDivisor で決定
-    this.radius = map(this.index, 0, this.scale.length - 1, sizes / config.circleRadiusMaxDivisor, sizes / config.circleRadiusMinDivisor);
+    this.radius = this.calculateRadius(sizes);
     this.x = random(this.radius, width - this.radius);
     this.y = random(this.radius, height - this.radius);
     this.updateScale();
 
-    // 速度
     this.speedX = 0;
     this.speedY = 0;
+    this.angle = 0;
+    this.angularVelocity = 0;
 
-    // p5.Oscillator の設定
+    // p5.Oscillator / p5.Envelope の設定（衝突時の発音に使用）
     this.oscillator = new p5.Oscillator(config.oscillatorType);
     this.oscillator.amp(0);
     this.oscillator.start();
@@ -65,149 +62,140 @@ class Circle {
     );
     this.env.setRange(config.envelopeRange.max, config.envelopeRange.min);
 
-    // 顔の設定
+    // 顔の表情。新旧の表情をクロスフェードさせるための状態も持つ
     this.eyeType = "circle";
     this.mouthType = "smile";
     this.newEyeType = this.eyeType;
     this.newMouthType = this.mouthType;
     this.faceTransition = 1;
 
-    this.angle = 0;
-    this.angularVelocity = 0;
-    this.switched = false;
-
+    // スケール切り替え時の色・音のクロスフェード用
     this.transitionActive = false;
     this.scaleTransition = 1;
-    
-    // -------------------------------
-    // Sleep 機能のための状態変数の初期化
-    this.sleeping = false;      // スリープ状態かどうか
-    // ウィンドウ方式のための変数
-    // rotation の前回値（sleep解除判定用）
-    this.lastRotationX = rotationX;
-    this.lastRotationY = rotationY;
-    this.windowStartTime = undefined; // 一定期間の開始時刻
-    this.windowStartX = undefined;    // 一定期間の開始位置 X
-    this.windowStartY = undefined;    // 一定期間の開始位置 Y
-    // 閾値の設定（ピクセル単位およびミリ秒単位）
-    this.movementThreshold = config.movementThreshold * sizes; // このウィンドウ内での総移動量がこの値未満なら「静止」とみなす
-    this.sleepTimeThreshold = 100; // 100ミリ秒以上の期間で評価
-    // -------------------------------
-    
-    // （元の実装用に前回の位置も残す場合）
-    this.prevX = this.x;
-    this.prevY = this.y;
+
+    // Sleep 機能: 一定時間ほとんど動いていなければ静止状態とみなし、物理更新を止める。
+    // windowStart* は「静止判定を行う時間ウィンドウ」の開始時刻・開始位置。
+    this.sleeping = false;
+    this.windowStartTime = undefined;
+    this.windowStartX = undefined;
+    this.windowStartY = undefined;
+    this.movementThreshold = config.movementThreshold * sizes; // ウィンドウ内の総移動量がこれ未満なら静止とみなす
+    this.sleepTimeThreshold = 100; // 静止判定を行うウィンドウの長さ（ミリ秒）
   }
-  
-   updateScale() {
+
+  updateScale() {
     this.midiNote = this.scale[this.index];
-    this.color = this.calculateColor(this.chosenScaleObj, this.index)}
+    this.color = this.calculateColor(this.chosenScaleObj, this.index);
+  }
 
   // config.hueMapping を利用して色を計算
   calculateColor(scaleObj, noteIndex) {
-    let hueBase = config.hueMapping[scaleObj.key];
-    let brightVal = (scaleObj.mode === 'major') ? 90 : 70;
-    let hueOffset = 50;
-    let satVal = map(noteIndex, 0, scaleObj.scale.length - 1, 0, 65);
-    let hueVal = map(noteIndex, 0, scaleObj.scale.length - 1, hueBase - hueOffset, hueBase + hueOffset);
+    const hueBase = config.hueMapping[scaleObj.key];
+    const brightVal = (scaleObj.mode === 'major') ? 90 : 70;
+    const hueOffset = 50;
+    const satVal = map(noteIndex, 0, scaleObj.scale.length - 1, 0, 65);
+    const hueVal = map(noteIndex, 0, scaleObj.scale.length - 1, hueBase - hueOffset, hueBase + hueOffset);
     return convertHSBtoRGB(hueVal, satVal, brightVal);
   }
-  
-  
-update(circles, sizes) {
-  const currentTime = millis();
-  // ウィンドウの初期化：まだ開始時刻がセットされていなければ、今の時刻と位置をセット
-  if (this.windowStartTime === undefined) {
+
+  calculateRadius(sizes) {
+    return map(this.index, 0, this.scale.length - 1, sizes / config.circleRadiusMaxDivisor, sizes / config.circleRadiusMinDivisor);
+  }
+
+  update(circles, sizes) {
+    const currentTime = millis();
+    this.updateMovementWindow(currentTime);
+    this.checkWakeUpFromRotation(currentTime);
+
+    if (!this.sleeping) {
+      this.applyRotationInput(sizes);
+      this.radius = this.calculateRadius(sizes);
+      this.move();
+      this.resolveCollisions(circles);
+    }
+
+    if (this.transitionActive) {
+      this.updateScaleTransition();
+    }
+
+    this.advanceScaleIfDue();
+  }
+
+  // 静止判定用のウィンドウを進める。ウィンドウ内で十分に動いていればウィンドウをリセットして起きたままにし、
+  // 動いていなければ sleep 状態に入る。
+  updateMovementWindow(currentTime) {
+    if (this.windowStartTime === undefined) {
+      this.resetMovementWindow(currentTime);
+    }
+
+    const elapsed = currentTime - this.windowStartTime;
+    const totalMovement = dist(this.x, this.y, this.windowStartX, this.windowStartY);
+    const hasMoved = totalMovement >= this.movementThreshold;
+
+    if (elapsed >= this.sleepTimeThreshold && !hasMoved) {
+      this.enterSleep();
+    } else if (hasMoved) {
+      this.resetMovementWindow(currentTime);
+      this.sleeping = false;
+    }
+  }
+
+  resetMovementWindow(currentTime) {
     this.windowStartTime = currentTime;
     this.windowStartX = this.x;
     this.windowStartY = this.y;
   }
-  
-  const elapsed = currentTime - this.windowStartTime;
-  const totalMovement = sqrt((this.x - this.windowStartX) ** 2 + (this.y - this.windowStartY) ** 2);
-  
-  if (elapsed >= this.sleepTimeThreshold) {
-    if (totalMovement < this.movementThreshold) {
-      if (!this.sleeping) {
-        // 初めてスリープに入るとき、rotationX/Yを保存
-        this.sleepRotationX = rotationX;
-        this.sleepRotationY = rotationY;
-      }
-      this.sleeping = true;
-      // 安定して静止しているなら、速度をリセットして振動を抑制
-      this.speedX = 0;
-      this.speedY = 0;
-      this.angularVelocity = 0;
-    } else {
-      // 移動があった場合はウィンドウリセット
-      this.windowStartTime = currentTime;
-      this.windowStartX = this.x;
-      this.windowStartY = this.y;
-      this.sleeping = false;
+
+  enterSleep() {
+    if (!this.sleeping) {
+      // sleep に入った瞬間の回転を基準として保存し、そこからの変化で wake up を判定する
+      this.sleepRotationX = rotationX;
+      this.sleepRotationY = rotationY;
     }
-  } else {
-    if (totalMovement >= this.movementThreshold) {
-      this.windowStartTime = currentTime;
-      this.windowStartX = this.x;
-      this.windowStartY = this.y;
-      this.sleeping = false;
-    }
+    this.sleeping = true;
+    this.speedX = 0;
+    this.speedY = 0;
+    this.angularVelocity = 0;
   }
-  
-  // スリープ状態の間、rotationX/Y の変化で wake up する
-  if (this.sleeping) {
+
+  // sleep 中に端末が大きく回転されたら wake up する
+  checkWakeUpFromRotation(currentTime) {
+    if (!this.sleeping) return;
+
     const rotationDiffX = abs(rotationX - this.sleepRotationX);
     const rotationDiffY = abs(rotationY - this.sleepRotationY);
-    if (rotationDiffX >= config.rotationWakeThreshold || rotationDiffY >= config.rotationWakeThreshold) {
-      // 外部からの大きな入力があれば、sleep解除
+    const rotatedEnough = rotationDiffX >= config.rotationWakeThreshold || rotationDiffY >= config.rotationWakeThreshold;
+
+    if (rotatedEnough) {
       this.sleeping = false;
-      // ウィンドウの初期化もリセット
-      this.windowStartTime = currentTime;
-      this.windowStartX = this.x;
-      this.windowStartY = this.y;
+      this.resetMovementWindow(currentTime);
     }
   }
-  
-  // sleep 状態なら、物理更新（move, checkCollision）はスキップ
-  if (!this.sleeping) {
-    // 外部入力による速度更新
-    this.speedX += (rotationY * (config.rotationFactor*sizes));
-    this.speedY += (rotationX * (config.rotationFactor*sizes));
-    
-    const maxSpeed = config.maxSpeed*sizes;
+
+  // 端末の傾き（rotationX/Y）を加速度として速度に加算する
+  applyRotationInput(sizes) {
+    this.speedX += rotationY * (config.rotationFactor * sizes);
+    this.speedY += rotationX * (config.rotationFactor * sizes);
+
+    const maxSpeed = config.maxSpeed * sizes;
     this.speedX = constrain(this.speedX, -maxSpeed, maxSpeed);
     this.speedY = constrain(this.speedY, -maxSpeed, maxSpeed);
+  }
 
-    // 円のサイズ再計算
-    this.radius = map(this.index, 0, this.scale.length - 1, sizes / config.circleRadiusMaxDivisor, sizes / config.circleRadiusMinDivisor);
-
-
-    // 移動処理
-    this.move();
-
-    // 衝突処理
-    for (let other of circles) {
+  resolveCollisions(circles) {
+    for (const other of circles) {
       if (this !== other) {
         this.checkCollision(other);
       }
     }
-    
   }
-    if (this.transitionActive) {
-      this.updateScaleTransition();
-    }
-    // スケール変更の判定
+
+  advanceScaleIfDue() {
     if (millis() - lastChangeTime > config.scaleChangeInterval) {
       lastChangeTime = millis();
       updateCirclesScale();
     }
-  
-  // 前回の位置更新（必要なら）
-  this.prevX = this.x;
-  this.prevY = this.y;
-}
-
-  
+  }
 
   // スケール遷移を開始（現在の状態と新規状態を保存して補間する）
   startScaleTransition(newScaleObj) {
@@ -230,7 +218,7 @@ update(circles, sizes) {
 
   updateScaleTransition() {
     this.scaleTransition += deltaTime / config.transitionTime;
-    let t = constrain(this.scaleTransition, 0, 1);
+    const t = constrain(this.scaleTransition, 0, 1);
 
     this.color.r = lerp(this.oldTransitionTarget.color.r, this.transitionTarget.color.r, t);
     this.color.g = lerp(this.oldTransitionTarget.color.g, this.transitionTarget.color.g, t);
@@ -244,61 +232,49 @@ update(circles, sizes) {
 
   move() {
     if (touches.length > 0) return;
+
     this.x += this.speedX;
     this.y += this.speedY;
     this.angle += this.angularVelocity;
 
-    let collidedWithWall = checkWallsAndBounce(this, width, height);
+    const collidedWithWall = checkWallsAndBounce(this, width, height);
     if (collidedWithWall) {
       this.playSound();
       this.randomizeFace();
-      this.speedX*=config.gravity;
-      this.speedY*=config.gravity;
+      this.speedX *= config.gravity;
+      this.speedY *= config.gravity;
     }
     this.angularVelocity *= config.angularFriction;
   }
 
-
   checkCollision(other) {
-  const distCenters = dist(this.x, this.y, other.x, other.y);
-  if (distCenters < this.radius + other.radius) {
+    const distCenters = dist(this.x, this.y, other.x, other.y);
+    if (distCenters >= this.radius + other.radius) return;
 
-    // 衝突後の速度計算 (元の速度はまだ更新しない)
+    // 衝突後の速度を計算してから重なりを解消する。preventOverlap は位置のみを
+    // 補正するものなので、その前後で速度が変わらないよう一旦退避しておく。
     elasticCollision2D(this, other);
+    const speedThis = { x: this.speedX, y: this.speedY, angular: this.angularVelocity };
+    const speedOther = { x: other.speedX, y: other.speedY, angular: other.angularVelocity };
 
-    // 速度を一旦保存する
-    const newSpeedThis = { x: this.speedX, y: this.speedY };
-    const newSpeedOther = { x: other.speedX, y: other.speedY };
-    const newAngularThis = this.angularVelocity;
-    const newAngularOther = other.angularVelocity;
-
-    // 重なり解消 (位置の微調整のみ)
     preventOverlap(this, other);
 
-    // 衝突直後の音などの処理
-    // this.playSound();
     this.randomizeFace();
-    // other.playSound();
     other.randomizeFace();
 
-    // 保存した速度を再設定して、次フレームから動かす
-    this.speedX = newSpeedThis.x;
-    this.speedY = newSpeedThis.y;
-    other.speedX = newSpeedOther.x;
-    other.speedY = newSpeedOther.y;
+    this.speedX = speedThis.x;
+    this.speedY = speedThis.y;
+    this.angularVelocity = speedThis.angular;
 
-    this.angularVelocity = newAngularThis;
-    other.angularVelocity = newAngularOther;
+    other.speedX = speedOther.x;
+    other.speedY = speedOther.y;
+    other.angularVelocity = speedOther.angular;
   }
-}
-
-  
-  
 
   randomizeFace() {
     this.oldEyeType = this.newEyeType;
     this.oldMouthType = this.newMouthType;
-    let face = getRandomFace();
+    const face = getRandomFace();
     this.newEyeType = face.eye;
     this.newMouthType = face.mouth;
     this.faceTransition = 0;
@@ -320,7 +296,6 @@ update(circles, sizes) {
     noStroke();
     ellipse(0, 0, this.radius * 2);
 
-    // 顔描画の設定
     const eyeOffsetX = this.radius * 0.3;
     const eyeOffsetY = this.radius * 0.2;
     const eyeSize = this.radius * 0.2;
@@ -329,11 +304,11 @@ update(circles, sizes) {
     const mouthHeight = this.radius * 0.3;
 
     if (this.faceTransition < 1) {
-      this.faceTransition += config.faceTransitionIncrement;
-      if (this.faceTransition > 1) this.faceTransition = 1;
+      this.faceTransition = Math.min(this.faceTransition + config.faceTransitionIncrement, 1);
     }
-    const t = this.faceTransition;
-    if (t < 1) {
+
+    if (this.faceTransition < 1) {
+      const t = this.faceTransition;
       push();
       tint(255, (1 - t) * 255);
       drawFace(this.oldEyeType, this.oldMouthType, eyeOffsetX, eyeOffsetY, eyeSize, mouthY, mouthWidth, mouthHeight);
@@ -348,25 +323,3 @@ update(circles, sizes) {
     pop();
   }
 }
-
-
-
-
-
-
-
-
-
- 
-
-
-
-
-
-
-
-
-
-
-
-

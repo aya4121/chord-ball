@@ -1,4 +1,4 @@
-function Startstopbutton(sizes){
+function createStartStopButton(sizes) {
   startStopButton = createButton('Start');
   setButtonStyle(startStopButton, sizes);
   startStopButton.mousePressed(() => toggleRunning(sizes));
@@ -30,5 +30,4 @@ function setButtonStyle(button, sizes) {
   button.style('font-size', (buttonWidth / 6) + 'px');
   button.style('padding', (buttonHeight / 10) + 'px ' + (buttonWidth / 20) + 'px');
   button.style('border-radius', (buttonHeight / 5) + 'px');
-  
 }
